@@ -1,30 +1,95 @@
-function Results({ onBack }) {
-  const clues = [
-    {
-      icon: "📍",
-      title: "Location",
-      text: "Your content suggests you are around Bengaluru.",
-      risk: "HIGH"
-    },
-    {
+function Results({ analysis, onBack }) {
+  const score = analysis?.score || {
+    total: 0,
+    level: "low",
+    breakdown: [],
+  };
+
+  const photo = analysis?.photo || {
+    has_exif: false,
+    gps: null,
+    taken_at: null,
+    device: null,
+  };
+
+  const text = analysis?.text || {
+    clues: [],
+    stranger_summary: "No text was provided to analyze.",
+    scam_message: "",
+    fixes: [],
+  };
+
+  const clues = text.clues || [];
+
+  const level = score.level
+    ? score.level.toUpperCase()
+    : "LOW";
+
+  // Convert backend clue types into nicer display names/icons
+  const clueInfo = {
+    college: {
       icon: "🎓",
-      title: "Education",
-      text: "Your college or student identity may be identifiable.",
-      risk: "MEDIUM"
+      title: "College",
     },
-    {
+    workplace: {
+      icon: "💼",
+      title: "Workplace",
+    },
+    home_area: {
+      icon: "🏠",
+      title: "Home Area",
+    },
+    city: {
+      icon: "📍",
+      title: "City",
+    },
+    routine: {
       icon: "⏰",
       title: "Daily Routine",
-      text: "A post suggests you may leave for college around 8 AM.",
-      risk: "HIGH"
     },
-    {
-      icon: "📸",
-      title: "Photo Clues",
-      text: "Background details may reveal where the photo was taken.",
-      risk: "MEDIUM"
-    }
-  ];
+    birthday: {
+      icon: "🎂",
+      title: "Birthday",
+    },
+    family: {
+      icon: "👨‍👩‍👧",
+      title: "Family",
+    },
+    friends: {
+      icon: "👥",
+      title: "Friends",
+    },
+    travel_plans: {
+      icon: "✈️",
+      title: "Travel Plans",
+    },
+    contact_info: {
+      icon: "📞",
+      title: "Contact Info",
+    },
+    other: {
+      icon: "🔎",
+      title: "Personal Clue",
+    },
+  };
+
+  // Photo-related fixes
+  const photoFixes = [];
+
+  if (photo.gps) {
+    photoFixes.push("Turn off location on your camera app");
+  }
+
+  if (photo.device) {
+    photoFixes.push("Remove hidden photo data before sharing files");
+  }
+
+  // Combine backend fixes
+  const fixes = [
+    ...photoFixes,
+    ...(text.fixes || []),
+    ...(analysis?.fixes || []),
+  ].filter((fix, index, arr) => arr.indexOf(fix) === index);
 
   return (
     <div className="results-page">
@@ -32,6 +97,7 @@ function Results({ onBack }) {
       {/* TOP BAR */}
 
       <div className="results-nav">
+
         <button className="back-button" onClick={onBack}>
           ← Back
         </button>
@@ -43,6 +109,7 @@ function Results({ onBack }) {
         <div className="privacy-status">
           ● ANALYSIS COMPLETE
         </div>
+
       </div>
 
 
@@ -75,60 +142,89 @@ function Results({ onBack }) {
         <div className="score-area">
 
           <div className="score-circle">
-            <div className="score-number">76</div>
-            <div className="score-total">/ 100</div>
+
+            <div className="score-number">
+              {score.total}
+            </div>
+
+            <div className="score-total">
+              / 100
+            </div>
+
           </div>
 
           <div>
-            <p className="score-label">PRIVACY RISK</p>
 
-            <h2>HIGH EXPOSURE</h2>
+            <p className="score-label">
+              PRIVACY RISK
+            </p>
+
+            <h2>
+              {level} EXPOSURE
+            </h2>
 
             <p className="score-description">
-              Multiple personal clues can be combined.
+              {score.total === 0
+                ? "Very little personal information was detected."
+                : score.total <= 33
+                ? "Only a small amount of potentially sensitive information was detected."
+                : score.total <= 66
+                ? "Some personal clues could be combined by a stranger."
+                : "Multiple personal clues can be combined."
+              }
             </p>
+
           </div>
 
         </div>
 
 
+        {/* REAL BACKEND BREAKDOWN */}
+
         <div className="risk-bars">
 
-          <div className="risk-row">
-            <span>Location</span>
-            <strong>85</strong>
+          {score.breakdown && score.breakdown.length > 0 ? (
 
-            <div className="bar">
-              <div style={{ width: "85%" }}></div>
-            </div>
-          </div>
+            score.breakdown.map((item, index) => {
 
-          <div className="risk-row">
-            <span>Identity</span>
-            <strong>70</strong>
+              const percentage = Math.min(
+                (item.points / 30) * 100,
+                100
+              );
 
-            <div className="bar">
-              <div style={{ width: "70%" }}></div>
-            </div>
-          </div>
+              return (
+                <div className="risk-row" key={index}>
 
-          <div className="risk-row">
-            <span>Routine</span>
-            <strong>90</strong>
+                  <span>
+                    {item.label}
+                  </span>
 
-            <div className="bar">
-              <div style={{ width: "90%" }}></div>
-            </div>
-          </div>
+                  <strong>
+                    {item.points}
+                  </strong>
 
-          <div className="risk-row">
-            <span>Personal</span>
-            <strong>50</strong>
+                  <div className="bar">
 
-            <div className="bar">
-              <div style={{ width: "50%" }}></div>
-            </div>
-          </div>
+                    <div
+                      style={{
+                        width: `${percentage}%`,
+                      }}
+                    ></div>
+
+                  </div>
+
+                </div>
+              );
+
+            })
+
+          ) : (
+
+            <p>
+              No specific risk factors detected.
+            </p>
+
+          )}
 
         </div>
 
@@ -146,8 +242,15 @@ function Results({ onBack }) {
           </div>
 
           <div>
-            <p>STRANGER'S VIEW</p>
-            <h2>What could someone figure out?</h2>
+
+            <p>
+              STRANGER'S VIEW
+            </p>
+
+            <h2>
+              What could someone figure out?
+            </h2>
+
           </div>
 
         </div>
@@ -156,51 +259,73 @@ function Results({ onBack }) {
         <div className="stranger-profile">
 
           <div className="profile-line">
+
             <span>👤</span>
+
             <p>
-              Likely a <strong>college student</strong>
-              studying computer science.
+              {text.stranger_summary ||
+                "No significant personal information was detected."}
             </p>
+
           </div>
 
-          <div className="profile-line">
-            <span>📍</span>
-            <p>
-              Appears to spend time around
-              <strong> Bengaluru</strong>.
-            </p>
-          </div>
+          {photo.gps && (
+            <div className="profile-line">
 
-          <div className="profile-line">
-            <span>⏰</span>
-            <p>
-              May have a predictable
-              <strong> morning college routine</strong>.
-            </p>
-          </div>
+              <span>📍</span>
 
-          <div className="profile-line">
-            <span>🎓</span>
-            <p>
-              College identity may be inferred
-              from combined clues.
-            </p>
-          </div>
+              <p>
+                Your photo contains
+                <strong> GPS location data</strong>.
+              </p>
+
+            </div>
+          )}
+
+          {photo.taken_at && (
+            <div className="profile-line">
+
+              <span>⏰</span>
+
+              <p>
+                Your photo contains
+                <strong> date and time information</strong>.
+              </p>
+
+            </div>
+          )}
+
+          {photo.device && (
+            <div className="profile-line">
+
+              <span>📱</span>
+
+              <p>
+                Your photo contains
+                <strong> device information</strong>.
+              </p>
+
+            </div>
+          )}
 
         </div>
 
 
-                <div className="clue-count">
+        <div className="clue-count">
 
-          <span>🧩 4 CLUES CONNECTED</span>
+          <span>
+            🧩 {clues.length} CLUE{clues.length !== 1 ? "S" : ""} CONNECTED
+          </span>
 
           <div className="profile-insight">
 
-            <strong>What a stranger could infer</strong>
+            <strong>
+              What a stranger could infer
+            </strong>
 
             <p>
-              College student in Bengaluru with a potentially
-              predictable morning routine.
+              {text.stranger_summary ||
+                "No significant personal information was detected."}
             </p>
 
           </div>
@@ -215,91 +340,197 @@ function Results({ onBack }) {
       <section className="clues-section">
 
         <div className="section-heading">
-          <p>🔎 EXPOSED CLUES</p>
-          <h2>Small clues can add up.</h2>
+
+          <p>
+            🔎 EXPOSED CLUES
+          </p>
+
+          <h2>
+            Small clues can add up.
+          </h2>
+
         </div>
 
 
         <div className="clue-grid">
 
-          {clues.map((clue, index) => (
+          {clues.length > 0 ? (
 
-            <div className="clue-card" key={index}>
+            clues.map((clue, index) => {
+
+              const info =
+                clueInfo[clue.type] || clueInfo.other;
+
+              return (
+
+                <div
+                  className="clue-card"
+                  key={index}
+                >
+
+                  <div className="clue-top">
+
+                    <div className="clue-icon">
+                      {info.icon}
+                    </div>
+
+                    <span
+                      className={`risk ${clue.risk}`}
+                    >
+                      {clue.risk.toUpperCase()}
+                    </span>
+
+                  </div>
+
+                  <h3>
+                    {info.title}
+                  </h3>
+
+                  <p>
+                    {clue.why || clue.evidence}
+                  </p>
+
+                  {clue.found && (
+                    <small>
+                      Found: <strong>{clue.found}</strong>
+                    </small>
+                  )}
+
+                </div>
+
+              );
+
+            })
+
+          ) : (
+
+            <div className="clue-card">
 
               <div className="clue-top">
 
                 <div className="clue-icon">
-                  {clue.icon}
+                  🛡️
                 </div>
-
-                <span className={`risk ${clue.risk.toLowerCase()}`}>
-                  {clue.risk}
-                </span>
 
               </div>
 
-              <h3>{clue.title}</h3>
+              <h3>
+                No text clues detected
+              </h3>
 
-              <p>{clue.text}</p>
+              <p>
+                No potentially identifying clues were found
+                in the text you provided.
+              </p>
 
             </div>
 
-          ))}
+          )}
 
         </div>
 
       </section>
 
-            {/* CLUE CONNECTION */}
+
+      {/* CLUE CONNECTION */}
 
       <section className="connection-section">
 
         <div className="section-heading">
-          <p>🧩 CLUE CONNECTION</p>
-          <h2>Small clues become a bigger picture.</h2>
+
+          <p>
+            🧩 CLUE CONNECTION
+          </p>
+
+          <h2>
+            Small clues become a bigger picture.
+          </h2>
+
         </div>
+
 
         <div className="connection-card">
 
-          <div className="connection-item">
-            <div className="connection-icon">🎓</div>
-            <div>
-              <strong>College identity</strong>
-              <span>CSE student + college references</span>
+          {clues.length > 0 ? (
+
+            clues.slice(0, 3).map((clue, index) => {
+
+              const info =
+                clueInfo[clue.type] || clueInfo.other;
+
+              return (
+                <div key={index}>
+
+                  <div className="connection-item">
+
+                    <div className="connection-icon">
+                      {info.icon}
+                    </div>
+
+                    <div>
+
+                      <strong>
+                        {info.title}
+                      </strong>
+
+                      <span>
+                        {clue.evidence}
+                      </span>
+
+                    </div>
+
+                  </div>
+
+                  {index < Math.min(clues.length, 3) - 1 && (
+                    <div className="connection-line"></div>
+                  )}
+
+                </div>
+              );
+
+            })
+
+          ) : (
+
+            <div className="connection-item">
+
+              <div className="connection-icon">
+                🛡️
+              </div>
+
+              <div>
+
+                <strong>
+                  No connected text clues
+                </strong>
+
+                <span>
+                  Nothing significant was detected.
+                </span>
+
+              </div>
+
             </div>
-          </div>
 
-          <div className="connection-line"></div>
+          )}
 
-          <div className="connection-item">
-            <div className="connection-icon">📍</div>
-            <div>
-              <strong>Location</strong>
-              <span>Photo + location-related clues</span>
-            </div>
-          </div>
-
-          <div className="connection-line"></div>
-
-          <div className="connection-item">
-            <div className="connection-icon">⏰</div>
-            <div>
-              <strong>Routine</strong>
-              <span>Repeated timing or schedule clues</span>
-            </div>
-          </div>
 
           <div className="connection-result">
-            <span>STRANGER COULD INFER</span>
+
+            <span>
+              STRANGER COULD INFER
+            </span>
 
             <strong>
-              Student identity + location + routine
+              {text.stranger_summary ||
+                "Very little information could be inferred."}
             </strong>
 
             <p>
               Individually these clues may seem harmless.
-              Together they reveal a much more detailed profile.
+              Together they can reveal more information.
             </p>
+
           </div>
 
         </div>
@@ -309,51 +540,56 @@ function Results({ onBack }) {
 
       {/* SIMULATED THREAT */}
 
-      <section className="threat-card">
+      {text.scam_message && (
 
-        <div className="threat-label">
-          ⚠️ SIMULATED MISUSE SCENARIO
-        </div>
+        <section className="threat-card">
 
-        <h2>
-          How could these clues be combined?
-        </h2>
-
-        <p>
-          A scammer could combine your college, location and
-          routine information to make a targeted message appear
-          more believable.
-        </p>
-
-
-        <div className="threat-example">
-
-          <div className="message-header">
-            <span>📨 Example message</span>
-            <span>SIMULATION</span>
+          <div className="threat-label">
+            ⚠️ EXAMPLE SCAM (FOR AWARENESS)
           </div>
 
-          <div className="fake-message">
-            <strong>College Notice</strong>
+          <h2>
+            How could these clues be misused?
+          </h2>
 
-            <p>
-              Your college account requires verification.
-              Please complete the verification process...
-            </p>
+          <p>
+            A scammer could combine publicly visible clues
+            to make a targeted message appear more believable.
+          </p>
 
-            <button>
-              Example suspicious link
-            </button>
+
+          <div className="threat-example">
+
+            <div className="message-header">
+
+              <span>
+                📨 Example message
+              </span>
+
+              <span>
+                SIMULATION
+              </span>
+
+            </div>
+
+            <div className="fake-message">
+
+              <p>
+                {text.scam_message}
+              </p>
+
+            </div>
+
           </div>
 
-        </div>
+          <p className="simulation-note">
+            This is a simulated example for awareness.
+            It does not contain a real link or contact information.
+          </p>
 
-        <p className="simulation-note">
-          This is a simulated example showing why combining
-          seemingly harmless clues can increase risk.
-        </p>
+        </section>
 
-      </section>
+      )}
 
 
       {/* PROTECTION */}
@@ -361,36 +597,65 @@ function Results({ onBack }) {
       <section className="protection-section">
 
         <div className="section-heading">
-          <p>🛡 PROTECT YOURSELF</p>
-          <h2>Reduce what strangers can discover.</h2>
+
+          <p>
+            🛡 PROTECT YOURSELF
+          </p>
+
+          <h2>
+            Reduce what strangers can discover.
+          </h2>
+
         </div>
 
 
         <div className="fix-grid">
 
-          <div className="fix-card">
-            <span>01</span>
-            <h3>Remove photo metadata</h3>
-            <p>
-              Strip GPS information before uploading photos.
-            </p>
-          </div>
+          {fixes.length > 0 ? (
 
-          <div className="fix-card">
-            <span>02</span>
-            <h3>Hide exact routines</h3>
-            <p>
-              Avoid posting schedules or locations in real time.
-            </p>
-          </div>
+            fixes.map((fix, index) => (
 
-          <div className="fix-card">
-            <span>03</span>
-            <h3>Review old posts</h3>
-            <p>
-              Remove unnecessary personal information from older content.
-            </p>
-          </div>
+              <div
+                className="fix-card"
+                key={index}
+              >
+
+                <span>
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+
+                <h3>
+                  Privacy fix
+                </h3>
+
+                <p>
+                  {fix}
+                </p>
+
+              </div>
+
+            ))
+
+          ) : (
+
+            <div className="fix-card">
+
+              <span>
+                ✓
+              </span>
+
+              <h3>
+                No immediate fixes needed
+              </h3>
+
+              <p>
+                No specific privacy fixes were generated
+                from this analysis.
+              </p>
+
+            </div>
+
+          )}
 
         </div>
 
@@ -403,11 +668,17 @@ function Results({ onBack }) {
 
         <div className="exposure-box">
 
-          <span>BEFORE</span>
+          <span>
+            CURRENT SCORE
+          </span>
 
-          <strong>76</strong>
+          <strong>
+            {score.total}
+          </strong>
 
-          <p>HIGH EXPOSURE</p>
+          <p>
+            {level} EXPOSURE
+          </p>
 
         </div>
 
@@ -419,11 +690,17 @@ function Results({ onBack }) {
 
         <div className="exposure-box after">
 
-          <span>AFTER FIXES</span>
+          <span>
+            AFTER FIXES
+          </span>
 
-          <strong>31</strong>
+          <strong>
+            —
+          </strong>
 
-          <p>LOWER EXPOSURE</p>
+          <p>
+            Re-analyze after applying fixes
+          </p>
 
         </div>
 
