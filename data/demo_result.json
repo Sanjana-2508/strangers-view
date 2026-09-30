@@ -1,0 +1,59 @@
+{
+  "photo": {
+    "has_exif": true,
+    "gps": { "lat": 12.9716, "lng": 77.5946 },
+    "taken_at": "2026-09-20 07:45:12",
+    "device": "Samsung SM-S911B"
+  },
+  "text": {
+    "clues": [
+      {
+        "type": "college",
+        "found": "BMSIT",
+        "evidence": "Leaving for BMSIT at 8am",
+        "risk": "high",
+        "why": "A stranger knows where you are every morning"
+      },
+      {
+        "type": "routine",
+        "found": "7:45 bus from the same stop",
+        "evidence": "Every day I catch the 7:45 bus from the same stop.",
+        "risk": "high",
+        "why": "A stranger can predict where you will be at a fixed time"
+      },
+      {
+        "type": "birthday",
+        "found": "14 March",
+        "evidence": "My birthday is on 14 March",
+        "risk": "medium",
+        "why": "Your birthday helps scammers guess passwords and answer security questions"
+      }
+    ],
+    "stranger_summary": "A stranger could learn your college, your daily schedule, and your birthday.",
+    "scam_message": "EXAMPLE SCAM (for awareness): Hi, this is the college accounts office. Your BMSIT fee for this semester is overdue. Pay now at [link] before your 14 March birthday or your account will be blocked.",
+    "fixes": [
+      "Do not post your schedule while on the way",
+      "Avoid sharing the exact time and place of your daily routine",
+      "Keep your full birth date private"
+    ]
+  },
+  "score": {
+    "total": 78,
+    "level": "high",
+    "breakdown": [
+      { "source": "photo", "label": "GPS location in photo", "points": 30 },
+      { "source": "photo", "label": "Date and time in photo", "points": 5 },
+      { "source": "photo", "label": "Phone model in photo", "points": 5 },
+      { "source": "text", "label": "college (high)", "points": 15 },
+      { "source": "text", "label": "routine (high)", "points": 15 },
+      { "source": "text", "label": "birthday (medium)", "points": 8 }
+    ]
+  },
+  "fixes": [
+    "Turn off location on your camera app",
+    "Remove hidden photo data before sharing files",
+    "Do not post your schedule while on the way",
+    "Avoid sharing the exact time and place of your daily routine",
+    "Keep your full birth date private"
+  ]
+}
