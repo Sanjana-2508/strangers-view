@@ -28,7 +28,7 @@ Rules for clues:
 1. "evidence" must be copied EXACTLY, letter for letter, from the user's text. Never change it, never translate it.
 2. Only report information that is really written in the text. Never guess. Never invent.
 3. If nothing risky is found, return "clues": [] and do not invent problems.
-4. The text may be in English, Hindi (Roman letters), or Hinglish. Understand all of them. Copy evidence in the same language as written. Write "found", "why", "stranger_summary" and "fixes" in simple English.
+4. The text may be in English, Hindi (Devanagari or Roman letters), or Hinglish. Understand all of them. Copy evidence in the same language as written. Write "found", "why", "stranger_summary" and "fixes" in simple English.
 5. Risk guide: high = exact place, exact time, daily routine, phone or email. medium = birthday, family names, travel plans. low = general city, hobbies-related small clues.
 
 Rules for scam_message:
