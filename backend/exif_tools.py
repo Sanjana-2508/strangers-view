@@ -1,6 +1,7 @@
 from PIL import Image, ImageOps, ExifTags
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 import io
+
 
 def _convert_to_degrees(value):
     """Convert GPS coordinates from degrees/minutes/seconds to decimal."""
@@ -10,6 +11,7 @@ def _convert_to_degrees(value):
         seconds = float(value[2])
 
         return degrees + (minutes / 60.0) + (seconds / 3600.0)
+
     except (TypeError, ValueError, IndexError, ZeroDivisionError):
         return None
 
@@ -20,6 +22,7 @@ def read_exif(file) -> Dict[str, Any]:
 
     Returns:
         {
+            "has_exif": True/False,
             "gps": {"lat": ..., "lng": ...} or None,
             "taken_at": "YYYY-MM-DD HH:MM:SS" or None,
             "device": "..." or None
@@ -27,6 +30,7 @@ def read_exif(file) -> Dict[str, Any]:
     """
 
     result = {
+        "has_exif": False,
         "gps": None,
         "taken_at": None,
         "device": None
@@ -38,6 +42,8 @@ def read_exif(file) -> Dict[str, Any]:
 
         if not exif:
             return result
+
+        result["has_exif"] = True
 
         # -------------------------------------------------
         # 1. DATE / TIME
@@ -53,6 +59,7 @@ def read_exif(file) -> Dict[str, Any]:
         # -------------------------------------------------
         # 2. DEVICE / PHONE MODEL
         # -------------------------------------------------
+
         model = exif.get(ExifTags.Base.Model)
         make = exif.get(ExifTags.Base.Make)
 
@@ -64,6 +71,7 @@ def read_exif(file) -> Dict[str, Any]:
         # -------------------------------------------------
         # 3. GPS
         # -------------------------------------------------
+
         gps_info = exif.get_ifd(ExifTags.IFD.GPS)
 
         if gps_info:
@@ -78,6 +86,7 @@ def read_exif(file) -> Dict[str, Any]:
                 lng = _convert_to_degrees(longitude)
 
                 if lat is not None and lng is not None:
+
                     if str(latitude_ref).upper() == "S":
                         lat = -lat
 
@@ -94,9 +103,6 @@ def read_exif(file) -> Dict[str, Any]:
     except Exception:
         # EXIF should NEVER cause the API to crash.
         return result
-
-    from PIL import ImageOps
-import io
 
 
 def clean_photo(file):
@@ -124,10 +130,12 @@ def clean_photo(file):
 
     return output
 
+
 def get_photo_fixes(photo):
     """
     Generate privacy fixes based on photo metadata.
     """
+
     fixes = []
 
     if photo.get("gps") is not None:
